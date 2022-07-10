@@ -26,8 +26,6 @@ enum ParsePersonError {
     ParseInt(ParseIntError),
 }
 
-// I AM NOT DONE
-
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
 // 2. Split the given string on the commas present in it
@@ -38,9 +36,46 @@ enum ParsePersonError {
 // 6. If while extracting the name and the age something goes wrong, an error should be returned
 // If everything goes well, then return a Result of a Person object
 
+// impl FromStr for Person {
+//     type Err = ParsePersonError;
+//     fn from_str(s: &str) -> Result<Person, Self::Err> {
+//         if s == "" {
+//             return Err(ParsePersonError::Empty)
+//         };
+//         let mut fields = s.split(",");
+//         let name = fields.next().filter(|x| x.len() > 0).map(String::from);
+//         let age = fields.next().map(|x| x.parse::<usize>());
+//         if let Some(_) = fields.next() {
+//             return Err(ParsePersonError::BadLen)
+//         };
+//         match (name, age) {
+//             (Some(name), Some(Ok(age))) => Ok(Person{ name, age }),
+//             (_, None) => Err(ParsePersonError::BadLen),
+//             (None, None) => Err(ParsePersonError::BadLen),
+//             (None, Some(_)) => Err(ParsePersonError::NoName),
+//             (_, Some(Err(err))) => Err(ParsePersonError::ParseInt(err)),
+//         }
+//     }
+// }
+
 impl FromStr for Person {
     type Err = ParsePersonError;
     fn from_str(s: &str) -> Result<Person, Self::Err> {
+        if s == "" {
+            return Err(ParsePersonError::Empty);
+        };
+        let (name, age) = s.split_once(",").ok_or(ParsePersonError::BadLen)?;
+        let name = if name == "" {
+            return Err(ParsePersonError::NoName);
+        } else {
+            name.to_string()
+        };
+        let age = if age.contains(",") {
+            return Err(ParsePersonError::BadLen);
+        } else {
+            age.parse().map_err(ParsePersonError::ParseInt)?
+        };
+        Ok(Person { name, age })
     }
 }
 
